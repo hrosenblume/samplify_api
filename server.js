@@ -38,12 +38,31 @@ app.get('/', function(req, res) {
 });
 
 app.get('/years/:artist', function(req, res) {
+  year_frequency = {older : 0
+                  , seventies : 0
+                  , eighties : 0
+                  , nineties : 0
+                  , modern : 0 };
   request_counter = 0;
   error_flag = false;
   get_urls_to_songs_from_artist(req.params.artist, "years", res);
 });
 
 app.get('/genres/:artist', function(req, res) {
+  genre_frequency = {hip : 0
+                   , dance : 0
+                   , rock : 0
+                   , soul : 0
+                   , jazz: 0
+                   , reggae : 0
+                   , country : 0
+                   , world : 0
+                   , soundtrack : 0
+                   , classical : 0
+                   , spoken : 0
+                   , easy : 0
+                   , gospel : 0
+                   , other: 0 };
   request_counter = 0;
   get_urls_to_songs_from_artist(req.params.artist, "genres", res);
 });
