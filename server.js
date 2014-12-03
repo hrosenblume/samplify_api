@@ -56,7 +56,7 @@ app.set('view engine', 'jade');
 app.use(express.static('public'));
 
 // set server port
-app.listen(4000);
+app.listen(process.env.PORT || 4000);
 console.log('magic happens on port 4000');
 exports = module.exports = app;
 
