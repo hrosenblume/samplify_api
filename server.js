@@ -11,6 +11,7 @@ var http = require('http');
 var url_requests;
 var request_counter;
 var error_flag;
+var res_sent;
 var year_frequency = {older : 0
                     , seventies : 0
                     , eighties : 0
@@ -30,6 +31,7 @@ var genre_frequency = {hip : 0
                      , easy : 0
                      , gospel : 0
                      , other: 0 };
+var samples_stored = [];
 
 
 //  routes
@@ -65,6 +67,13 @@ app.get('/genres/:artist', function(req, res) {
                    , other: 0 };
   request_counter = 0;
   get_urls_to_songs_from_artist(req.params.artist, "genres", res);
+});
+
+app.get('/samples/:song', function(req, res) {
+  res_sent = false;
+  request_counter = 0;
+  samples_stored = [];
+  query_songs(req.params.song, res);
 });
 
 // views as directory for all template files
@@ -202,13 +211,163 @@ var get_years_from_songs = function(url, res) {
       } else if (request_counter == 0) {
         console.log('ERROR: 404 B');
         if (!error_flag) res.send('Error 505: No Samples Found');
-          error_flag = true;
+        error_flag = true;
       }
 		});
 	}
 
   var req = http.request(url, callback);
 	req.end();
+}
+
+var query_songs = function(song, res) {
+  //http://www.whosampled.com/search/tracks/?q=
+  sleep(500); 
+  url_requests = 0;
+  song = song.split('+').join('%20');
+  url = 'http://www.whosampled.com/search/tracks/?q=' + song;
+  callback = function(response) {
+    var str;
+    response.on('data', function(html) {
+      str += html;
+    });
+
+    response.on('end', function() {
+      var $ = cheerio.load(str);
+
+      var list = $('.list');
+      if (list.html() != null) {
+        var link = list.children('li').first().children('.trackDetails').children('.trackName').attr('href');
+        link = 'http://www.whosampled.com' + link;
+        console.log(link);
+        get_urls_and_initial_samples(link, res);
+      } else {
+        console.log('ERROR: 404 A');
+        if (!error_flag) res.send('Error 505: No Samples Found');
+        error_flag = true;
+      }
+    })
+  }
+
+  var req = http.request(url, callback);
+  req.end();
+}
+
+var get_urls_and_initial_samples= function(url, res) {
+  callback = function(response) {
+    var str;
+
+    response.on('data', function(html) {
+      str += html;
+    });
+
+    response.on('end', function() {
+      var $ = cheerio.load(str);
+
+      var check = $('.sectionHeader').first().text();
+      if (check.indexOf('Contains') > -1) {
+        var data = $('.list').first();
+        url_requests += data.children('li').length;
+        data.children('li').each(function() {
+          var a_tag = $(this).children('.trackDetails').children('.trackName');
+          var link = a_tag.attr('href');
+          var title = a_tag.text();
+          link = 'http://www.whosampled.com' + link;
+          bypass_buffer_link(title, link, res);
+        });
+      }
+    });
+  }
+
+  var req = http.request(url, callback);
+  req.end();
+}
+
+var bypass_buffer_link = function(title, url, res) {
+  callback = function(response) {
+    var str;
+
+    response.on('data', function(html) {
+      str += html;
+    });
+    response.on('end', function() {
+      var $ = cheerio.load(str);
+      var link = $('.sampleTrackWrap.sampleTrackWrapRight');
+      link = link.children('tbody').children('tr').first();
+      link = link.children('td:nth-child(2)').children('.sampleTrackInfo');
+      link = link.children('h1').children('.trackName').attr('href');
+      link = 'http://www.whosampled.com' + link;
+      get_samples_of_samples(title, link, res);
+    });
+  }
+
+  var req = http.request(url, callback);
+  req.end();
+}
+
+var get_samples_of_samples = function(original_title, url, res) {
+  callback = function(response) {
+    var str;
+
+    response.on('data', function(html) {
+      str += html;
+    });
+
+    response.on('end', function() {
+      var $ = cheerio.load(str);
+      var check = $('.sectionHeader').first().text();
+      var title;
+      if (check.indexOf('Contains') > -1) {
+        var data = $('.list').first();
+        data.children('li').each(function() {
+          var a_tag = $(this).children('.trackDetails').children('.trackName');
+          var link = a_tag.attr('href');
+          title = a_tag.text();
+          link = 'http://www.whosampled.com' + link;
+          store_sample(original_title, title, res);
+        });
+      } else {
+        store_sample(original_title, title, res);
+      }
+    console.log("URL REQUESTS: " + url_requests);
+    console.log("REQUEST COUNTER: " + request_counter);
+    });
+  }
+
+  var req = http.request(url, callback);
+  req.end();
+}
+
+var store_sample = function (original_title, title, res) {
+  var sample_exists = false;
+  for (var x = 0; x < samples_stored.length; x++) {
+    var list = samples_stored[x];
+    console.log(list[0] + " ::: " + original_title);
+    if (list[0] == original_title) {
+      if (title != null) { 
+        list[1][list[1].length] = title;
+      }
+      sample_exists = true;
+    }
+  }
+  if (!sample_exists) {
+    request_counter++;
+    var list = [];
+    list[0] = original_title
+    list[1] = [];
+    list[1][list[1].length] = title;
+    //console.log(list);
+    samples_stored[samples_stored.length] = list;
+  }
+
+  if (request_counter == url_requests) {
+    console.log(samples_stored);
+    if (!res_sent) {
+      res.json(samples_stored);
+      res_sent = true;
+    }
+    //error check
+  }
 }
 
 var store_year_frequency = function(year) {
