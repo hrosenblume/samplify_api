@@ -212,7 +212,7 @@ var get_years_from_songs = function(url, res) {
         res.json(year_frequency);
       } else if (request_counter == 0) {
         console.log('ERROR: 404 B');
-        if (!error_flag) res.send('Error 505: No Samples Found');
+        if (!error_flag) res.send('Error 404');
         error_flag = true;
       }
 		});
@@ -245,7 +245,7 @@ var query_songs = function(song, res) {
         get_urls_and_initial_samples(link, res);
       } else {
         console.log('ERROR: 404 A');
-        if (!error_flag) res.send('Error 505: No Samples Found');
+        if (!error_flag) res.send('Error 404');
         error_flag = true;
       }
     })
