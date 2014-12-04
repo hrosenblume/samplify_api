@@ -66,6 +66,7 @@ app.get('/genres/:artist', function(req, res) {
                    , gospel : 0
                    , other: 0 };
   request_counter = 0;
+  error_flag = false;
   get_urls_to_songs_from_artist(req.params.artist, "genres", res);
 });
 
@@ -73,6 +74,7 @@ app.get('/samples/:song', function(req, res) {
   res_sent = false;
   request_counter = 0;
   samples_stored = [];
+  error_flag = false;
   query_songs(req.params.song, res);
 });
 
