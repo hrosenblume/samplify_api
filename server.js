@@ -110,7 +110,7 @@ var get_urls_to_songs_from_artist = function (artist, option, res) {
       var track_list = $('.trackList').children('.trackItem').children('.trackItemHead').children('.trackName').children('a');
       if (track_list.html() == null) {
         console.log("ERROR: 404 A");
-        if (!error_flag) res.send('Error 404: No Artist Found');
+        if (!error_flag) res.send('Error 404');
         error_flag = true;
       }
 
@@ -169,7 +169,7 @@ var get_genres_from_songs = function(url, res) {
           res.json(genre_frequency);
         } else if (request_counter == 0) {
           console.log('ERROR: 404 B');
-          if (!error_flag) res.send('Error 505: No Samples Found');
+          if (!error_flag) res.send('Error 404');
           error_flag = true;
         }
   		});
