@@ -12,25 +12,26 @@ var url_requests;
 var request_counter;
 var error_flag;
 var res_sent;
-var year_frequency = {older : 0
-                    , seventies : 0
-                    , eighties : 0
-                    , nineties : 0
-                    , modern : 0 };
-var genre_frequency = {hip : 0
-                     , dance : 0
-                     , rock : 0
-                     , soul : 0
-                     , jazz: 0
-                     , reggae : 0
-                     , country : 0
-                     , world : 0
-                     , soundtrack : 0
-                     , classical : 0
-                     , spoken : 0
-                     , easy : 0
-                     , gospel : 0
-                     , other: 0 };
+var emptyArray = [];
+var year_frequency = {older : []
+                    , seventies : []
+                    , eighties : []
+                    , nineties : []
+                    , modern : [] };
+var genre_frequency = {hip : []
+                     , dance : []
+                     , rock : []
+                     , soul : []
+                     , jazz: []
+                     , reggae : []
+                     , country : []
+                     , world : []
+                     , soundtrack : []
+                     , classical : []
+                     , spoken : []
+                     , easy : []
+                     , gospel : []
+                     , other: [] };
 var samples_stored = [];
 
 
@@ -40,31 +41,31 @@ app.get('/', function(req, res) {
 });
 
 app.get('/years/:artist', function(req, res) {
-  year_frequency = {older : 0
-                  , seventies : 0
-                  , eighties : 0
-                  , nineties : 0
-                  , modern : 0 };
+  year_frequency = {older : []
+                  , seventies : []
+                  , eighties : []
+                  , nineties : []
+                  , modern : [] };
   request_counter = 0;
   error_flag = false;
   get_urls_to_songs_from_artist(req.params.artist, "years", res);
 });
 
 app.get('/genres/:artist', function(req, res) {
-  genre_frequency = {hip : 0
-                   , dance : 0
-                   , rock : 0
-                   , soul : 0
-                   , jazz: 0
-                   , reggae : 0
-                   , country : 0
-                   , world : 0
-                   , soundtrack : 0
-                   , classical : 0
-                   , spoken : 0
-                   , easy : 0
-                   , gospel : 0
-                   , other: 0 };
+  genre_frequency = {hip : []
+                   , dance : []
+                   , rock : []
+                   , soul : []
+                   , jazz: []
+                   , reggae : []
+                   , country : []
+                   , world : []
+                   , soundtrack : []
+                   , classical : []
+                   , spoken : []
+                   , easy : []
+                   , gospel : []
+                   , other: [] };
   request_counter = 0;
   error_flag = false;
   get_urls_to_songs_from_artist(req.params.artist, "genres", res);
@@ -86,8 +87,8 @@ app.set('view engine', 'jade');
 app.use(express.static('public'));
 
 // set server port
-app.listen(process.env.PORT || 4000);
-console.log('magic happens on port 4000');
+app.listen(process.env.PORT || 4001);
+console.log('magic happens on port 4001');
 exports = module.exports = app;
 
 var get_urls_to_songs_from_artist = function (artist, option, res) {
@@ -159,7 +160,9 @@ var get_genres_from_songs = function(url, res) {
           data.children('li').each(function() {
     				var genre = $(this).children('.trackDetails').children('.trackBadge').children('.bottomItem').text();
             genre = genre.trim();
-            store_genre_frequency(genre);
+            var title = $(this).children('.trackDetails').children('.trackName').attr('title');
+            title = title.trim();
+            store_genre_frequency(genre, title);
             console.log(genre);
     			});
         }
@@ -200,9 +203,11 @@ var get_years_from_songs = function(url, res) {
         data.children('li').each(function() {
           var artist_year_raw = $(this).children('.trackDetails').children('.trackArtist').text();
           var year = artist_year_raw.slice(-9);
+          var title = $(this).children('.trackDetails').children('.trackName').attr('title');
+          title = title.trim();
           year = stripNonNumbers(year);
           year = Number(year);
-          store_year_frequency(year);
+          store_year_frequency(year, title);
           console.log(year);
         });
       }
@@ -372,59 +377,59 @@ var store_sample = function (original_title, title, res) {
   }
 }
 
-var store_year_frequency = function(year) {
+var store_year_frequency = function(year, title) {
   if (year <= 1969) {
-    year_frequency.older++;
+    year_frequency.older[year_frequency.older.length] = title;
   } else if (year >= 1970 && year < 1980) {
-    year_frequency.seventies++;
+    year_frequency.seventies[year_frequency.seventies.length] = title;
   } else if (year >= 1980 && year < 1990) {
-    year_frequency.eighties++;
+    year_frequency.eighties[year_frequency.eighties.length] = title;
   } else if (year >= 1990 && year < 2000) {
-    year_frequency.nineties++;
+    year_frequency.nineties[year_frequency.nineties.length] = title;
   } else {
-    year_frequency.modern++;
+    year_frequency.modern[year_frequency.modern.length] = title;
   }
 }
 
-var store_genre_frequency = function(genre) {
+var store_genre_frequency = function(genre, title) {
   switch(genre) {
     case "Hip-Hop / R&B":
-      genre_frequency.hip++;
+      genre_frequency.hip[genre_frequency.hip.length] = title;
       break;
     case "Electronic / Dance":
-      genre_frequency.dance++;
+      genre_frequency.dance[genre_frequency.dance.length] = title;
       break;
     case "Rock / Pop":
-      genre_frequency.rock++;
+      genre_frequency.rock[genre_frequency.rock.length] = title;
       break;
     case "Jazz / Blues":
-      genre_frequency.jazz++;
+      genre_frequency.jazz[genre_frequency.jazz.length] = title;
     case "Reggae":
-      genre_frequency.reggae++;
+      genre_frequency.reggae[genre_frequency.reggae.length] = title;
       break;
     case "Country / Folk":
-      genre_frequency.country++;
+      genre_frequency.country[genre_frequency.country.length] = title;
       break;
     case "World":
-      genre_frequency.world++;
+      genre_frequency.world[genre_frequency.world.length] = title;
       break;
     case "Soundtrack":
-      genre_frequency.soundtrack++;
+      genre_frequency.soundtrack[genre_frequency.soundtrack.length] = title;
       break;
     case "Classical":
-      genre_frequency.classical++;
+      genre_frequency.classical[genre_frequency.classical.length] = title;
       break;
     case "Spoken Word": 
-      genre_frequency.spoken++;
+      genre_frequency.spoken[genre_frequency.spoken.length] = title;
       break;
     case "Easy Listening":
-      genre_frequency.easy++;
+      genre_frequency.easy[genre_frequency.easy.length] = title;
       break;
     case "Gospel": 
-      genre_frequency.gospel++;
+      genre_frequency.gospel[genre_frequency.gospel.length] = title;
       break;
     default:
-      genre_frequency.other++;
+      genre_frequency.other[genre_frequency.other.length] = title;
   }
 }
 
